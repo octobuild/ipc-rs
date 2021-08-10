@@ -8,7 +8,7 @@ edition = "2018"
 libc = "0.2"
 
 [target.'cfg(windows)'.dependencies]
-winapi = { version = "0.3", features = ["handleapi", "minwinbase", "synchapi", "winbase"] }
+winapi = { version = "0.3", features = ["handleapi", "synchapi", "winbase"] }
 
-[dev-dependencies]
+[target.'cfg(unix)'.dev-dependencies]
 tempdir = "0.3"

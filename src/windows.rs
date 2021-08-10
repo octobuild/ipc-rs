@@ -1,19 +1,15 @@
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
-use std::i32;
 use std::io::{Error, Result};
-use winapi::shared::minwindef::DWORD;
+use winapi::shared::winerror::WAIT_TIMEOUT;
 use winapi::um::handleapi::CloseHandle;
 use winapi::um::synchapi::{CreateSemaphoreW, ReleaseSemaphore, WaitForSingleObject};
-use winapi::um::winbase::{INFINITE, WAIT_OBJECT_0};
+use winapi::um::winbase::{INFINITE, WAIT_FAILED, WAIT_OBJECT_0};
 use winapi::um::winnt::{HANDLE, LONG};
 
 pub struct Semaphore {
     handle: HANDLE,
 }
-
-pub const WAIT_FAILED: DWORD = 0xFFFFFFFF;
-pub const WAIT_TIMEOUT: DWORD = 0x00000102;
 
 impl Semaphore {
     /// Get value hash
