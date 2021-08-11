@@ -18,7 +18,7 @@
 
 #![allow(bad_style)]
 
-use libc::{sembuf, EEXIST, O_RDWR};
+use libc::{sembuf, semid_ds, EEXIST, O_RDWR};
 use std::env;
 use std::fs;
 use std::hash::{Hash, Hasher};
@@ -26,7 +26,7 @@ use std::io::{Error, ErrorKind, Result};
 use std::mem;
 use std::path::PathBuf;
 
-use self::consts::{semid_ds, SEM_UNDO, SETVAL};
+use self::consts::{SEM_UNDO, SETVAL};
 use std::collections::hash_map::DefaultHasher;
 
 pub struct Semaphore {
@@ -37,27 +37,12 @@ pub struct Semaphore {
 mod consts {
     pub static SEM_UNDO: libc::c_short = 0x1000;
     pub static SETVAL: libc::c_int = 16;
-
-    // TODO: remove this when https://github.com/rust-lang/libc/issues/2002 is fixed
-    #[repr(C)]
-    pub struct semid_ds {
-        pub sem_perm: libc::ipc_perm,
-        pub sem_otime: libc::time_t,
-        __glibc_reserved1: libc::c_ulong,
-        pub sem_ctime: libc::time_t,
-        __glibc_reserved2: libc::c_ulong,
-        pub sem_nsems: libc::c_ulong,
-        __glibc_reserved3: libc::c_ulong,
-        __glibc_reserved4: libc::c_ulong,
-    }
 }
 
 #[cfg(target_os = "macos")]
 mod consts {
     pub static SEM_UNDO: libc::c_short = 0o10000;
-    pub static SETVAL: libc::c_int = 8;
-
-    pub type semid_ds = libc::semid_ds;
+    pub static SETVAL: libc::c_int = libc::SETVAL;
 }
 
 impl Semaphore {
@@ -238,103 +223,4 @@ impl Semaphore {
 
 impl Drop for Semaphore {
     fn drop(&mut self) {}
-}
-
-#[cfg(test)]
-mod tests {
-    extern crate tempdir;
-
-    use std::fs::File;
-    use std::io::Write;
-    use std::mem;
-    use std::process::Command;
-    use std::str;
-
-    use super::consts::semid_ds;
-    use tempdir::TempDir;
-
-    macro_rules! offset {
-        ($ty:ty, $f:ident) => {
-            unsafe {
-                let f = std::ptr::null::<$ty>();
-                &(*f).$f as *const _ as usize
-            }
-        };
-    }
-
-    #[test]
-    fn check_offsets() {
-        let td = TempDir::new("test").unwrap();
-        let mut f = File::create(&td.path().join("foo.c")).unwrap();
-        f.write_all(
-            &format!(
-                r#"
-#include <assert.h>
-#include <stdio.h>
-#include <stddef.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <errno.h>
-#include <sys/types.h>
-#include <sys/ipc.h>
-#include <sys/sem.h>
-
-#define assert_eq(a, b) \
-    if ((a) != (b)) {{ \
-        printf("%s: %d != %d", #a, (int) (a), (int) (b)); \
-        return 1; \
-    }}
-
-int main() {{
-    assert_eq(offsetof(struct semid_ds, sem_perm), {sem_perm});
-    assert_eq(offsetof(struct semid_ds, sem_otime), {sem_otime});
-    assert_eq(offsetof(struct semid_ds, sem_nsems), {sem_nsems});
-    assert_eq(sizeof(struct semid_ds), {semid_ds});
-
-    assert_eq(SEM_UNDO, {SEM_UNDO});
-    assert_eq(SETVAL, {SETVAL});
-    return 0;
-}}
-
-"#,
-                sem_perm = offset!(semid_ds, sem_perm),
-                sem_otime = offset!(semid_ds, sem_otime),
-                // sem_ctime = offset!(semid_ds, sem_ctime),
-                sem_nsems = offset!(semid_ds, sem_nsems),
-                semid_ds = mem::size_of::<semid_ds>(),
-                SEM_UNDO = super::consts::SEM_UNDO,
-                SETVAL = super::consts::SETVAL,
-            )
-            .into_bytes(),
-        )
-        .unwrap();
-
-        let arg = if cfg!(target_word_size = "32") {
-            "-m32"
-        } else {
-            "-m64"
-        };
-        let s = Command::new("gcc")
-            .arg("-o")
-            .arg(td.path().join("foo"))
-            .arg(td.path().join("foo.c"))
-            .arg(arg)
-            .output()
-            .unwrap();
-        if !s.status.success() {
-            panic!(
-                "\n{}\n{}",
-                str::from_utf8(&s.stdout).unwrap(),
-                str::from_utf8(&s.stderr).unwrap()
-            );
-        }
-        let s = Command::new(td.path().join("foo")).output().unwrap();
-        if !s.status.success() {
-            panic!(
-                "\n{}\n{}",
-                str::from_utf8(&s.stdout).unwrap(),
-                str::from_utf8(&s.stderr).unwrap()
-            );
-        }
-    }
 }
