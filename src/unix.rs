@@ -41,7 +41,7 @@ mod consts {
 
 #[cfg(target_os = "macos")]
 mod consts {
-    pub static SEM_UNDO: libc::c_short = 0o10000;
+    pub static SEM_UNDO: libc::c_short = libc::SEM_UNDO;
     pub static SETVAL: libc::c_int = libc::SETVAL;
 }
 
