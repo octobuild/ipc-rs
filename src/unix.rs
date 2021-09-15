@@ -35,13 +35,13 @@ pub struct Semaphore {
 
 #[cfg(target_os = "linux")]
 mod consts {
-    pub static SEM_UNDO: libc::c_short = 0x1000;
+    pub static SEM_UNDO: libc::c_int = 0x1000;
     pub static SETVAL: libc::c_int = 16;
 }
 
 #[cfg(target_os = "macos")]
 mod consts {
-    pub static SEM_UNDO: libc::c_short = libc::SEM_UNDO;
+    pub static SEM_UNDO: libc::c_int = libc::SEM_UNDO;
     pub static SETVAL: libc::c_int = libc::SETVAL;
 }
 
@@ -211,11 +211,7 @@ impl Semaphore {
         let mut buf = sembuf {
             sem_num: 0,
             sem_op: amt,
-            sem_flg: if wait {
-                0
-            } else {
-                libc::IPC_NOWAIT as libc::c_short
-            } | SEM_UNDO,
+            sem_flg: (if wait { 0 } else { libc::IPC_NOWAIT } | SEM_UNDO) as libc::c_short,
         };
         libc::semop(self.semid, &mut buf, 1)
     }
