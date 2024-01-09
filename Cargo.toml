@@ -9,7 +9,7 @@ license = "Apache-2.0"
 libc = "0.2.99"
 
 [target.'cfg(windows)'.dependencies]
-winapi = { version = "0.3", features = ["handleapi", "synchapi", "winbase"] }
+winapi = { version = "0.3", features = ["handleapi", "synchapi", "winbase", "winerror", "winnt"] }
 
 [target.'cfg(unix)'.dev-dependencies]
 tempdir = "0.3"
