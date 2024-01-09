@@ -19,7 +19,7 @@ fn main() {
                 let sem1 = ipc::Semaphore::new("foo1", 0).unwrap();
                 let sem2 = ipc::Semaphore::new("foo2", 0).unwrap();
                 println!("[1] Unlock foo2");
-                let _ = sem2.release();
+                sem2.release();
                 let _ = sem1.access();
                 println!("[1] Lock foo1");
             }
