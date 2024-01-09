@@ -22,7 +22,7 @@ impl Semaphore {
     pub unsafe fn new(name: &str, cnt: usize) -> Result<Semaphore> {
         let name = format!(
             r"Global\{}-{}",
-            name.replace(r"\", ""),
+            name.replace('\\', ""),
             Semaphore::hash::<_>(&(name, "ipc-rs"))
         );
         let mut name = name.bytes().map(|b| b as u16).collect::<Vec<u16>>();
