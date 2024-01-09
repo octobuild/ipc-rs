@@ -145,8 +145,7 @@ impl Semaphore {
         let dir = filename.parent().unwrap();
 
         // As long as someone creates the directory we're alright.
-        let _ = fs::create_dir_all(&dir);
-        fs::create_dir_all(&dir).unwrap();
+        fs::create_dir_all(dir)?;
 
         // Make sure that the file exists. Open it in exclusive/create mode to
         // ensure that it's there, but don't overwrite it if it alredy exists.
