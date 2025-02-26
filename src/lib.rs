@@ -130,7 +130,7 @@ impl Semaphore {
     }
 }
 
-impl<'a> Drop for Guard<'a> {
+impl Drop for Guard<'_> {
     fn drop(&mut self) {
         unsafe { self.sem.inner.post() }
     }
