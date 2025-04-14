@@ -153,7 +153,7 @@ impl Semaphore {
         // see QSharedMemoryPrivate::createUnixKeyFile in Qt
         let filename = filename.to_str().unwrap().to_string() + "\0";
         let fd = libc::open(
-            filename.as_ptr() as *const i8,
+            filename.as_ptr() as *const libc::c_char,
             libc::O_EXCL | libc::O_CREAT | O_RDWR,
             0o640,
         );
