@@ -13,10 +13,7 @@
 //! ```
 //! use ipc::Semaphore;
 //!
-//! let s = match Semaphore::new("my-fun-semaphore", 1) {
-//!     Ok(sem) => sem,
-//!     Err(s) => panic!("failed to create a semaphore: {}", s)
-//! };
+//! let s = Semaphore::new("my-fun-semaphore", 1).expect("failed to create a semaphore");
 //!
 //! // lock the semaphore
 //! let guard = s.access();
