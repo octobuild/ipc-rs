@@ -113,7 +113,7 @@ impl Semaphore {
     /// guard structure which will release the resource when it falls out of
     /// scope. For a mutex-like semaphore, it is recommended to use this method
     /// rather than the `acquire` or `release` methods.
-    pub fn access(&self) -> Guard {
+    pub fn access(&self) -> Guard<'_> {
         self.acquire();
         Guard { sem: self }
     }
@@ -121,7 +121,7 @@ impl Semaphore {
     /// Attempt to access a resource of this semaphore.
     ///
     /// This function is identical to `access` except that it will never block.
-    pub fn try_access(&self) -> Option<Guard> {
+    pub fn try_access(&self) -> Option<Guard<'_>> {
         if self.try_acquire() {
             Some(Guard { sem: self })
         } else {
